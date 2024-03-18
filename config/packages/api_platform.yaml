@@ -1,6 +1,6 @@
 api_platform:
-    title: 'Project name'
-    description: 'Project description'
+    title: 'Blogim API'
+    description: 'API for Blogim.uz'
     version: '0.0.1'
 
     mapping:
