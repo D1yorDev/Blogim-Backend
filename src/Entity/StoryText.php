@@ -4,22 +4,17 @@
 	
 	use ApiPlatform\Metadata\ApiResource;
 	use App\Entity\Interfaces\CreatedAtSettableInterface;
-	use App\Entity\Interfaces\CreatedBySettableInterface;
 	use App\Entity\Interfaces\IsDeletedSettableInterface;
 	use App\Entity\Interfaces\UpdatedAtSettableInterface;
-	use App\Entity\Interfaces\UpdatedBySettableInterface;
 	use App\Repository\StoryTextRepository;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
-	use Symfony\Component\Security\Core\User\UserInterface;
 	
 	#[ORM\Entity(repositoryClass: StoryTextRepository::class)]
 	#[ApiResource]
 	class StoryText implements
 		CreatedAtSettableInterface,
-		CreatedBySettableInterface,
 		UpdatedAtSettableInterface,
-		UpdatedBySettableInterface,
 		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
@@ -34,19 +29,11 @@
 		#[ORM\Column(type: Types::TEXT)]
 		private ?string $text = null;
 		
-		#[ORM\ManyToOne(inversedBy: 'posts')]
-		#[ORM\JoinColumn(nullable: false)]
-		private ?User $createdBy = null;
-		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
 		private ?\DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
 		private ?\DateTimeInterface $updatedAt = null;
-		
-		#[ORM\ManyToOne(inversedBy: 'posts')]
-		#[ORM\JoinColumn(nullable: false)]
-		private ?User $updatedBy = null;
 		
 		#[ORM\Column]
 		private ?bool $isDeleted = false;
@@ -81,17 +68,6 @@
 			return $this;
 		}
 		
-		public function getCreatedBy(): ?User
-		{
-			return $this->createdBy;
-		}
-		
-		public function setCreatedBy(?UserInterface $createdBy): self
-		{
-			$this->createdBy = $createdBy;
-			
-			return $this;
-		}
 		
 		public function getCreatedAt(): ?\DateTimeInterface
 		{
@@ -117,19 +93,8 @@
 			return $this;
 		}
 		
-		public function getUpdatedby(): ?User
-		{
-			return $this->updatedBy;
-		}
 		
-		public function setUpdatedby(?UserInterface $updatedBy): self
-		{
-			$this->updatedBy = $updatedBy;
-			
-			return $this;
-		}
-		
-		public function isIsDeleted(): ?bool
+		public function getIsDeleted(): ?bool
 		{
 			return $this->isDeleted;
 		}

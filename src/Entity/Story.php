@@ -167,7 +167,7 @@
 			return $this;
 		}
 		
-		public function isIsDeleted(): ?bool
+		public function getIsDeleted(): ?bool
 		{
 			return $this->isDeleted;
 		}
