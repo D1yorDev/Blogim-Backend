@@ -2,7 +2,20 @@
 	
 	namespace App\Entity;
 	
+	use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+	use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+	use ApiPlatform\Metadata\ApiFilter;
 	use ApiPlatform\Metadata\ApiResource;
+	use ApiPlatform\Metadata\Delete;
+	use ApiPlatform\Metadata\Get;
+	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Post;
+	use ApiPlatform\Metadata\Put;
+	use App\Controller\DeleteAction;
+	use App\Entity\Interfaces\CreatedAtSettableInterface;
+	use App\Entity\Interfaces\CreatedBySettableInterface;
+	use App\Entity\Interfaces\IsDeletedSettableInterface;
+	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\MessageRepository;
 	use DateTimeInterface;
 	use Doctrine\Common\Collections\ArrayCollection;
@@ -10,10 +23,40 @@
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
 	use Symfony\Component\Security\Core\User\UserInterface;
+	use Symfony\Component\Serializer\Annotation\Groups;
 	
 	#[ORM\Entity(repositoryClass: MessageRepository::class)]
-	#[ApiResource]
-	class Message
+	#[ApiResource(
+		operations: [
+			new GetCollection(
+				normalizationContext: ['groups' => ['messages:read']],
+			),
+			new Get(
+				security: "object.getUser() == user || object.getChat().getUser() = user || is_granted('ROLE_ADMIN')",
+			),
+			new Put(
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
+			),
+			new Delete(
+				controller: DeleteAction::class,
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
+			),
+			new Post(
+			// todo: create controller for this
+			)
+		
+		],
+		normalizationContext: ['groups' => ['message:read', 'messages:read']],
+		denormalizationContext: ['groups' => ['message:write']],
+	
+	)]
+	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact'])]
+	class Message implements
+		CreatedAtSettableInterface,
+		CreatedBySettableInterface,
+		UpdatedAtSettableInterface,
+		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
@@ -22,25 +65,32 @@
 		
 		#[ORM\ManyToOne(inversedBy: 'messages')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['messages:read', 'message:write'])]
 		private ?Chat $chat = null;
 		
 		#[ORM\Column(type: Types::SMALLINT)]
+		#[Groups(['messages:read', 'message:write'])]
 		private ?int $type = null;
 		
 		#[ORM\OneToMany(mappedBy: 'message', targetEntity: MediaMessage::class)]
+		#[Groups(['messages:read', 'message:write'])]
 		private Collection $mediaMessages;
 		
 		#[ORM\OneToMany(mappedBy: 'message', targetEntity: TextMessage::class)]
+		#[Groups(['messages:read', 'message:write'])]
 		private Collection $textMessages;
 		
-		#[ORM\ManyToOne(inversedBy: 'posts')]
+		#[ORM\ManyToOne(inversedBy: 'publication')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['comments:read', 'messages:read',])]
 		private ?User $createdBy = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
+		#[Groups(['messages:read'])]
 		private ?DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+		#[Groups(['messages:read'])]
 		private ?DateTimeInterface $updatedAt = null;
 		
 		#[ORM\Column(type: 'boolean')]

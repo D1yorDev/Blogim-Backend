@@ -2,15 +2,53 @@
 	
 	namespace App\Entity;
 	
+	use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+	use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+	use ApiPlatform\Metadata\ApiFilter;
 	use ApiPlatform\Metadata\ApiResource;
+	use ApiPlatform\Metadata\Delete;
+	use ApiPlatform\Metadata\Get;
+	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Put;
+	use App\Controller\DeleteAction;
+	use App\Entity\Interfaces\CreatedAtSettableInterface;
+	use App\Entity\Interfaces\IsDeletedSettableInterface;
+	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\NotificationRepository;
 	use DateTimeInterface;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
 	
 	#[ORM\Entity(repositoryClass: NotificationRepository::class)]
-	#[ApiResource]
-	class Notification
+	#[ApiResource(
+		operations: [
+			new GetCollection(
+				// todo: faqat readEctionda faqat o'z xabarlaringi ko'rsat va normaliazatsiyalarni ko'rsat
+				normalizationContext: ['groups' => ['notifications:read']],
+			),
+			new Get(
+				security: "object.getForUser() == user || is_granted('ROLE_ADMIN')",
+			),
+			new Put(
+				security: "is_granted('ROLE_ADMIN')",
+			),
+			new Delete(
+				controller: DeleteAction::class,
+				security: "is_granted('ROLE_ADMIN')",
+			),
+		
+		
+		],
+		normalizationContext: ['groups' => ['notification:read', 'notifications:read']],
+		denormalizationContext: ['groups' => ['notification:write']],
+	
+	)]
+	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact'])]
+	class Notification implements
+		CreatedAtSettableInterface,
+		UpdatedAtSettableInterface,
+		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
 		#[ORM\GeneratedValue]

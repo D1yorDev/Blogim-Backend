@@ -12,6 +12,10 @@
 	use ApiPlatform\Metadata\Post;
 	use ApiPlatform\Metadata\Put;
 	use App\Controller\DeleteAction;
+	use App\Entity\Interfaces\CreatedAtSettableInterface;
+	use App\Entity\Interfaces\CreatedBySettableInterface;
+	use App\Entity\Interfaces\IsDeletedSettableInterface;
+	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\ChatRepository;
 	use DateTimeInterface;
 	use Doctrine\Common\Collections\ArrayCollection;
@@ -28,14 +32,14 @@
 				normalizationContext: ['groups' => ['chats:read']],
 			),
 			new Get(
-				security: "object == user || is_granted('ROLE_ADMIN')",
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
 			),
 			new Put(
-				security : "object == user || is_granted('ROLE_ADMIN')",
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
 			),
 			new Delete(
 				controller: DeleteAction::class,
-				security: "object == user || is_granted('ROLE_ADMIN')",
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
 			),
 			new Post()
 		
@@ -46,7 +50,11 @@
 	)]
 	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
 	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact'])]
-	class Chat
+	class Chat implements
+		CreatedAtSettableInterface,
+		CreatedBySettableInterface,
+		UpdatedAtSettableInterface,
+		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
 		#[ORM\GeneratedValue]

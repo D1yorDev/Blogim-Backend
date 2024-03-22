@@ -11,6 +11,7 @@
 	use App\Controller\Base\AbstractController;
 	use App\Entity\Chat;
 	use App\Entity\Interfaces\DeletedAtSettableInterface;
+	use App\Entity\Message;
 	use Doctrine\ORM\QueryBuilder;
 	
 	/**
@@ -60,6 +61,12 @@
 //            //Faqat ushbu foydalanuvchiga tegishli chatlarni ol
 				case Chat::class:
 					$this->addUser($queryBuilder, $rootTable);
+					break;
+				
+				case Message::class:
+					$queryBuilder->join("{$rootTable}.chat", 'chat');
+					$queryBuilder->andWhere("({$rootTable}.user = :user or {$rootTable}.chat.withUser = :user)");
+					$queryBuilder->setParameter('user', $this->getUser());
 					break;
 			}
 		}

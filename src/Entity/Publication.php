@@ -14,8 +14,6 @@
 	use Doctrine\Common\Collections\Collection;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
-	use phpDocumentor\Reflection\Type;
-	use phpDocumentor\Reflection\TypeResolver;
 	use Symfony\Component\Security\Core\User\UserInterface;
 	
 	#[ORM\Entity(repositoryClass: PublicationRepository::class)]
@@ -41,7 +39,7 @@
 		#[ORM\Column]
 		private ?int $likesCount = null;
 		
-		#[ORM\ManyToOne(inversedBy: 'posts')]
+		#[ORM\ManyToOne(inversedBy: 'publications')]
 		#[ORM\JoinColumn(nullable: false)]
 		private ?User $createdBy = null;
 		
@@ -51,14 +49,14 @@
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
 		private ?DateTimeInterface $updatedAt = null;
 		
-		#[ORM\ManyToOne(inversedBy: 'posts')]
+		#[ORM\ManyToOne(inversedBy: 'publications')]
 		#[ORM\JoinColumn(nullable: false)]
 		private ?User $updatedBy = null;
 		
 		#[ORM\Column(type: 'boolean')]
 		private ?bool $isDeleted = false;
 		
-		#[ORM\OneToMany(mappedBy: 'post', targetEntity: PublicationLike::class)]
+		#[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationLike::class)]
 		private Collection $likes;
 		
 		#[ORM\OneToMany(mappedBy: 'publication', targetEntity: Comment::class)]

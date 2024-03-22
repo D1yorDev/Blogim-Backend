@@ -2,31 +2,72 @@
 	
 	namespace App\Entity;
 	
+	use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+	use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+	use ApiPlatform\Metadata\ApiFilter;
 	use ApiPlatform\Metadata\ApiResource;
+	use ApiPlatform\Metadata\Delete;
+	use ApiPlatform\Metadata\Get;
+	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Post;
+	use ApiPlatform\Metadata\Put;
+	use App\Controller\DeleteAction;
+	use App\Entity\Interfaces\CreatedAtSettableInterface;
+	use App\Entity\Interfaces\CreatedBySettableInterface;
+	use App\Entity\Interfaces\IsDeletedSettableInterface;
+	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\CommentLikeRepository;
 	use DateTimeInterface;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
 	use Symfony\Component\Security\Core\User\UserInterface;
+	use Symfony\Component\Serializer\Annotation\Groups;
 	
 	#[ORM\Entity(repositoryClass: CommentLikeRepository::class)]
-	#[ApiResource]
-	class CommentLike
+	#[ApiResource(
+		operations: [
+			new GetCollection(
+				normalizationContext: ['groups' => ['commentLikes:read']],
+			),
+			new Get(
+			),
+			
+			new Delete(
+				security: "object.getUser() == user || is_granted('ROLE_ADMIN')",
+			),
+			new Post()
+		
+		],
+		normalizationContext: ['groups' => ['commentLike:read', 'commentLikes:read']],
+		denormalizationContext: ['groups' => ['commentLike:write']],
+	
+	)]
+	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'comment'=> 'exact'])]
+	class CommentLike implements
+		CreatedAtSettableInterface,
+		CreatedBySettableInterface,
+		UpdatedAtSettableInterface,
+		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
 		#[ORM\Column]
+		#[Groups(['commentLikes:read'])]
 		private ?int $id = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'likes')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['commentLikes:read', 'commentLike:write'])]
 		private ?Comment $comment = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'posts')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['commentLikes:read'])]
 		private ?User $createdBy = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
+		#[Groups(['commentLikes:read'])]
 		private ?DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

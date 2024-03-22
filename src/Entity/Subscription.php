@@ -3,6 +3,10 @@
 	namespace App\Entity;
 	
 	use ApiPlatform\Metadata\ApiResource;
+	use App\Entity\Interfaces\CreatedAtSettableInterface;
+	use App\Entity\Interfaces\CreatedBySettableInterface;
+	use App\Entity\Interfaces\IsDeletedSettableInterface;
+	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\SubscriptionRepository;
 	use DateTimeInterface;
 	use Doctrine\DBAL\Types\Types;
@@ -11,7 +15,11 @@
 	
 	#[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 	#[ApiResource]
-	class Subscription
+	class Subscription implements
+		CreatedAtSettableInterface,
+		CreatedBySettableInterface,
+		UpdatedAtSettableInterface,
+		IsDeletedSettableInterface
 	{
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
