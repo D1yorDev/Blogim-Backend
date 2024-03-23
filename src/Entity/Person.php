@@ -28,11 +28,30 @@
 		private ?int $id = null;
 		
 		#[ORM\Column(length: 255, nullable: true)]
-		#[Groups(['comments:read', 'commentLikes:read','messages:read'])]
+		#[Groups([
+			'comments:read',
+			'commentLikes:read',
+			'messages:read',
+			'persons:read',
+			'publications:read',
+			'publicationLikes:read',
+			'savedPosts:read',
+			'stories:read',
+			'subscriptions:read',
+		])]
 		private ?string $givenName = null;
 		
 		#[ORM\Column(length: 255, nullable: true)]
-		#[Groups(['comments:read', 'commentLikes:read','messages:read'])]
+		#[Groups([
+			'comments:read',
+			'commentLikes:read',
+			'messages:read',
+			'publications:read',
+			'publicationLikes:read',
+			'savedPosts:read',
+			'stories:read',
+			'subscriptions:read',
+		])]
 		private ?string $familyName = null;
 		
 		#[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]

@@ -2,16 +2,48 @@
 	
 	namespace App\Entity;
 	
+	use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+	use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+	use ApiPlatform\Metadata\ApiFilter;
 	use ApiPlatform\Metadata\ApiResource;
+	use ApiPlatform\Metadata\Delete;
+	use ApiPlatform\Metadata\Get;
+	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Post;
+	use ApiPlatform\Metadata\Put;
+	use App\Controller\DeleteAction;
 	use App\Entity\Interfaces\CreatedAtSettableInterface;
 	use App\Entity\Interfaces\IsDeletedSettableInterface;
 	use App\Entity\Interfaces\UpdatedAtSettableInterface;
 	use App\Repository\StoryTextRepository;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
+	use Symfony\Component\Serializer\Annotation\Groups;
 	
 	#[ORM\Entity(repositoryClass: StoryTextRepository::class)]
-	#[ApiResource]
+	#[ApiResource(
+		operations: [
+			new GetCollection(
+				normalizationContext: ['groups' => ['storyTexts:read']],
+			),
+			new Post(),
+			new Get(),
+			new Put(
+				security: "object.getStory().getUser() == user ||is_granted('ROLE_ADMIN')",
+			),
+			new Delete(
+				controller: DeleteAction::class,
+				security: "object.getStory().getUser() == user ||is_granted('ROLE_ADMIN')",
+			),
+		
+		
+		],
+		normalizationContext: ['groups' => ['storyText:read', 'storyTexts:read']],
+		denormalizationContext: ['groups' => ['storyText:write']],
+	
+	)]
+	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'user' => 'exect'])]
 	class StoryText implements
 		CreatedAtSettableInterface,
 		UpdatedAtSettableInterface,
@@ -20,19 +52,24 @@
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
 		#[ORM\Column]
+		#[Groups(['storyTexts:read'])]
 		private ?int $id = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'storyTexts')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['storyTexts:read','storyText:write'])]
 		private ?Story $story = null;
 		
 		#[ORM\Column(type: Types::TEXT)]
+		#[Groups(['storyTexts:read','storyText:write'])]
 		private ?string $text = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
+		#[Groups(['storyTexts:read'])]
 		private ?\DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+		#[Groups(['storyTexts:read'])]
 		private ?\DateTimeInterface $updatedAt = null;
 		
 		#[ORM\Column]

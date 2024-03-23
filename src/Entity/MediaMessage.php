@@ -19,7 +19,7 @@
 		operations: [
 			
 			new Get(
-				security: "object.getMessege().getUser() == user || is_granted('ROLE_ADMIN')",
+				security: "object.getMessage().getUser() == user || is_granted('ROLE_ADMIN')",
 			),
 			new Put(
 				security: "object.getMessage().getUser() == user || is_granted('ROLE_ADMIN')",

@@ -164,7 +164,16 @@
 		#[ORM\OneToMany(mappedBy: 'follow', targetEntity: Subscription::class)]
 		private Collection $subscriptions;
 		#[ORM\OneToMany(mappedBy: 'createdBy', targetEntity: Person::class)]
-		#[Groups(['comments:read','commentLikes:read','messages:read'])]
+		#[Groups([
+			'comments:read',
+			'commentLikes:read',
+			'messages:read',
+			'publications:read',
+			'publicationLikes:read',
+			'savedPosts:read',
+			'stories:read',
+			'subscriptions:read',
+		])]
 		private Collection $persons;
 		
 		public function __construct()

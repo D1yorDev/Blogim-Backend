@@ -9,6 +9,7 @@
 	use ApiPlatform\Metadata\Delete;
 	use ApiPlatform\Metadata\Get;
 	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Post;
 	use ApiPlatform\Metadata\Put;
 	use App\Controller\DeleteAction;
 	use App\Entity\Interfaces\CreatedAtSettableInterface;
@@ -18,23 +19,27 @@
 	use DateTimeInterface;
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
+	use Symfony\Component\Serializer\Annotation\Groups;
 	
 	#[ORM\Entity(repositoryClass: NotificationRepository::class)]
 	#[ApiResource(
 		operations: [
 			new GetCollection(
-				// todo: faqat readEctionda faqat o'z xabarlaringi ko'rsat va normaliazatsiyalarni ko'rsat
+			// todo: faqat readEctionda faqat o'z xabarlaringi ko'rsat va normaliazatsiyalarni ko'rsat
 				normalizationContext: ['groups' => ['notifications:read']],
 			),
+			new Post(
+				security: 'is_granted("ROLE_ADMIN")'
+			),
 			new Get(
-				security: "object.getForUser() == user || is_granted('ROLE_ADMIN')",
+				security: "object.getForUser() == null || object.getForUser() == user || is_granted('ROLE_ADMIN')",
 			),
 			new Put(
 				security: "is_granted('ROLE_ADMIN')",
 			),
 			new Delete(
 				controller: DeleteAction::class,
-				security: "is_granted('ROLE_ADMIN')",
+				security: "object.getForUser() == user ||is_granted('ROLE_ADMIN')",
 			),
 		
 		
@@ -44,7 +49,7 @@
 	
 	)]
 	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
-	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'user' => 'exa   ct'])]
 	class Notification implements
 		CreatedAtSettableInterface,
 		UpdatedAtSettableInterface,
@@ -53,22 +58,28 @@
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
 		#[ORM\Column]
+		#[Groups(['notifications:read'])]
 		private ?int $id = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'notifications')]
-		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['notifications:read', 'notification:write'])]
 		private ?User $forUser = null;
 		
 		#[ORM\Column(type: Types::TEXT)]
+		#[Groups(['notifications:read', 'notification:write'])]
 		private ?string $text = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+		#[Groups(['notifications:read'])]
+		// todo: avtomatik ravishda yozish
 		private ?\DateTimeInterface $readAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
+		#[Groups(['notifications:read'])]
 		private ?DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+		#[Groups(['notifications:read'])]
 		private ?DateTimeInterface $updatedAt = null;
 		
 		#[ORM\Column(type: 'boolean')]

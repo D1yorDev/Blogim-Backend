@@ -12,6 +12,8 @@
 	use App\Entity\Chat;
 	use App\Entity\Interfaces\DeletedAtSettableInterface;
 	use App\Entity\Message;
+	use App\Entity\Notification;
+	use App\Entity\SavedPost;
 	use Doctrine\ORM\QueryBuilder;
 	
 	/**
@@ -59,8 +61,14 @@
 //                break;
 //
 //            //Faqat ushbu foydalanuvchiga tegishli chatlarni ol
-				case Chat::class:
+				case Chat::class: //todo chat message ga o'xshab nafaqat ozi yaratgan ,suxbatdoshi yaratgan chatlarni ham ko'rish
+				case SavedPost::class:
 					$this->addUser($queryBuilder, $rootTable);
+					break;
+				
+				case Notification::class:
+					$queryBuilder->andWhere("{$rootTable}.forUser = :user");
+					$queryBuilder->setParameter('user', $this->getUser());
 					break;
 				
 				case Message::class:
@@ -83,7 +91,7 @@
 		
 		private function addUser(QueryBuilder $queryBuilder, string $tableName): void
 		{
-			$queryBuilder->andWhere("{$tableName}.createdBy = :user");
+			$queryBuilder->andWhere("{$tableName}.user = :user or {rootTable}.forUser = null");
 			$queryBuilder->setParameter('user', $this->getUser());
 			
 			// or if you use microservices

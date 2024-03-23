@@ -2,7 +2,15 @@
 	
 	namespace App\Entity;
 	
+	use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+	use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+	use ApiPlatform\Metadata\ApiFilter;
 	use ApiPlatform\Metadata\ApiResource;
+	use ApiPlatform\Metadata\Delete;
+	use ApiPlatform\Metadata\Get;
+	use ApiPlatform\Metadata\GetCollection;
+	use ApiPlatform\Metadata\Post;
+	use App\Controller\DeleteAction;
 	use App\Entity\Interfaces\CreatedAtSettableInterface;
 	use App\Entity\Interfaces\CreatedBySettableInterface;
 	use App\Entity\Interfaces\IsDeletedSettableInterface;
@@ -12,9 +20,28 @@
 	use Doctrine\DBAL\Types\Types;
 	use Doctrine\ORM\Mapping as ORM;
 	use Symfony\Component\Security\Core\User\UserInterface;
+	use Symfony\Component\Serializer\Annotation\Groups;
 	
 	#[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
-	#[ApiResource]
+	#[ApiResource(
+		operations: [
+			new GetCollection(
+				normalizationContext: ['groups' => ['subscriptions:read']],
+			),
+			new Post(),
+			new Get(),
+			new Delete(
+				security: "object.getUser() == user ||is_granted('ROLE_ADMIN')",
+			),
+		
+		
+		],
+		normalizationContext: ['groups' => ['subscription:read', 'subscriptions:read']],
+		denormalizationContext: ['groups' => ['subscription:write']],
+	
+	)]
+	#[ApiFilter(OrderFilter::class, properties: ['id', 'createdAt', 'updatedAt'])]
+	#[ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'user' => 'exect'])]
 	class Subscription implements
 		CreatedAtSettableInterface,
 		CreatedBySettableInterface,
@@ -24,20 +51,25 @@
 		#[ORM\Id]
 		#[ORM\GeneratedValue]
 		#[ORM\Column]
+		#[Groups(['subscriptions:read'])]
 		private ?int $id = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'subscriptions')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['subscriptions:read', 'subscription:write'])]
 		private ?User $follow = null;
 		
 		#[ORM\ManyToOne(inversedBy: 'posts')]
 		#[ORM\JoinColumn(nullable: false)]
+		#[Groups(['subscriptions:read'])]
 		private ?User $createdBy = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE)]
+		#[Groups(['subscriptions:read'])]
 		private ?DateTimeInterface $createdAt = null;
 		
 		#[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+		#[Groups(['subscriptions:read'])]
 		private ?DateTimeInterface $updatedAt = null;
 		
 		#[ORM\Column(type: 'boolean')]
